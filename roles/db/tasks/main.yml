@@ -1,0 +1,20 @@
+---
+# tasks file for roles/db
+- name: install MariaDB and some required stuff
+  apt:
+    name:
+      - mariadb-server
+      - python-pymysql
+    state: present
+
+- name: create DB
+  mysql_db:
+    name: "{{ db_name }}"
+    login_unix_socket: "{{ mariadb_socket }}"
+
+- name: create user
+  mysql_user:
+    login_unix_socket: "{{ mariadb_socket }}"
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    priv: "{{ db_name }}.*:ALL"

@@ -8,12 +8,13 @@
     db_password: "Zupa"     # Change me
     wordpress_temp: /tmp/wordpress.tar.gz
     apache_http_config: /etc/apache2/sites-available/wordpress.conf
+  roles:
+    - db
+
   tasks:
     - name: install stuff
       apt:
         name:
-          - mariadb-server
-          - python-pymysql
           - apache2
           - php-mysql
           - php-curl
@@ -28,21 +29,9 @@
         update_cache: true
       notify: restart apache2
 
-    - name: create DB
-      mysql_db:
-        name: "{{ db_name }}"
-        login_unix_socket: "{{ mariadb_socket }}"
-
-    - name: create user
-      mysql_user:
-        login_unix_socket: "{{ mariadb_socket }}"
-        name: "{{ db_user }}"
-        password: "{{ db_password }}"
-        priv: "{{ db_name }}.*:ALL"
-
     - name: Download WordPress
-      get_url: 
-        url: https://wordpress.org/latest.tar.gz 
+      get_url:
+        url: https://wordpress.org/latest.tar.gz
         dest: "{{ wordpress_temp }}"
 
     - name: Extract WordPress
@@ -70,7 +59,7 @@
         path: /etc/apache2/sites-enabled/000-default.conf
         state: absent
       notify: restart apache2
-      
+
     - name: Copy apache config
       copy:
         src: wordpress.conf
