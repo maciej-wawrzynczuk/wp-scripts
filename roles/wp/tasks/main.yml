@@ -1,0 +1,42 @@
+---
+# tasks file for roles/wp
+
+- name: Install php
+  apt:
+    name:
+      - php
+      - php-mysql
+      - php-curl
+      - php-gd
+      - php-mbstring
+      - php-xml
+      - php-xmlrpc
+      - php-soap
+      - php-intl
+      - php-zip
+    state: present
+
+- name: Download WordPress
+  get_url:
+    url: https://wordpress.org/latest.tar.gz
+    dest: "{{ wordpress_temp }}"
+
+- name: Extract WordPress
+  unarchive:
+    src: "{{ wordpress_temp }}"
+    dest: /var/www/
+    copy: no
+    owner: www-data
+    group: www-data
+
+    # TODO: modify config only when necsessery
+- name: get API information for wp-config
+  uri:
+    url: "https://api.wordpress.org/secret-key/1.1/salt/"
+    return_content: yes
+  register: salts
+
+- name: Configure Wordpress
+  template:
+    src: wp-config.php.j2
+    dest: /var/www/wordpress/wp-config.php

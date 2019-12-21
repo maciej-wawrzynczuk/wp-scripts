@@ -6,53 +6,20 @@
     db_name: "wordpress"
     db_user: "wordpress"
     db_password: "Zupa"     # Change me
-    wordpress_temp: /tmp/wordpress.tar.gz
     apache_http_config: /etc/apache2/sites-available/wordpress.conf
   roles:
     - db
+    - wp
 
   tasks:
     - name: install stuff
       apt:
         name:
           - apache2
-          - php-mysql
-          - php-curl
-          - php-gd
-          - php-mbstring
-          - php-xml
-          - php-xmlrpc
-          - php-soap
-          - php-intl
-          - php-zip
         state: present
         update_cache: true
       notify: restart apache2
 
-    - name: Download WordPress
-      get_url:
-        url: https://wordpress.org/latest.tar.gz
-        dest: "{{ wordpress_temp }}"
-
-    - name: Extract WordPress
-      unarchive:
-        src: "{{ wordpress_temp }}"
-        dest: /var/www/
-        copy: no
-        owner: www-data
-        group: www-data
-
-    # TODO: modify config only when necsessery
-    - name: get API information for wp-config
-      uri:
-        url: "https://api.wordpress.org/secret-key/1.1/salt/"
-        return_content: yes
-      register: salts
-
-    - name: Configure Wordpress
-      template:
-        src: wp-config.php.j2
-        dest: /var/www/wordpress/wp-config.php
 
     - name: get rid of default apache config
       file:

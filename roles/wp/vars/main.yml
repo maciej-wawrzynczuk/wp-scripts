@@ -1,0 +1,3 @@
+---
+# vars file for roles/wp
+wordpress_temp: /tmp/wordpress.tar.gz
