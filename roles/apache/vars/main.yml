@@ -1,0 +1,3 @@
+---
+# vars file for roles/apache
+apache_http_config: /etc/apache2/sites-available/wordpress.conf

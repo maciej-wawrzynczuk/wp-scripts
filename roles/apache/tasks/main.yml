@@ -1,0 +1,36 @@
+---
+# tasks file for roles/apache
+
+- name: install stuff
+  apt:
+    name:
+      - apache2
+    state: present
+    update_cache: true
+  notify: restart apache2
+
+
+- name: get rid of default apache config
+  file:
+    path: /etc/apache2/sites-enabled/000-default.conf
+    state: absent
+  notify: restart apache2
+
+- name: Copy apache config
+  copy:
+    src: wordpress.conf
+    dest: "{{ apache_http_config }}"
+  notify: restart apache2
+
+- name: activate apache config
+  file:
+    src: "{{ apache_http_config }}"
+    dest: "{{ apache_http_config | replace('sites-available', 'sites-enabled') }}"
+    state: link
+  notify: restart apache2
+
+- name: Enable mod rewrite
+  apache2_module:
+    name: rewrite
+    state: present
+  notify: restart apache2
