@@ -16,16 +16,16 @@
     state: absent
   notify: restart apache2
 
-- name: Copy apache config
-  copy:
-    src: wordpress.conf
+- name: Create apache config
+  template:
+    src: "{{ nossl_config_file }}.j2"
     dest: "{{ apache_http_config }}"
   notify: restart apache2
 
 - name: activate apache config
   file:
     src: "{{ apache_http_config }}"
-    dest: "{{ apache_http_config | replace('sites-available', 'sites-enabled') }}"
+    dest: "{{ sites_enabled }}/{{ nossl_config_file }}"
     state: link
   notify: restart apache2
 
@@ -33,4 +33,56 @@
   apache2_module:
     name: rewrite
     state: present
+  notify: restart apache2
+
+# SSL
+# TODO:
+# + create key
+# + create self signed key
+# - create config
+#
+# - use letsencrypt cert
+
+- name: Create SSL dir
+  file:
+    path: "{{ apache_ssl_path }}"
+    owner: root
+    group: root
+    mode: "0700"
+    state: directory
+
+- name: Create key
+  openssl_privatekey:
+    path: "{{ key_file }}"
+    size: 2048
+
+- name: Create csr
+  openssl_csr:
+    path: "{{ csr_file }}"
+    privatekey_path: "{{ key_file }}"
+    common_name: "{{ domain }}"
+
+- name: Sign cert
+  openssl_certificate:
+    provider: selfsigned
+    path: "{{ crt_file }}"
+    privatekey_path: "{{ key_file }}"
+    csr_path: "{{ csr_file }}"
+
+- name: Enable ssl_module
+  apache2_module:
+    name: ssl
+    state: present
+  notify: restart apache2
+
+- name: Create SSL config
+  template:
+    src: przestrzen-dev.conf.j2
+    dest: "{{ ssl_config }}"
+
+- name: Enable SSL config
+  file:
+    src: "{{ ssl_config }}"
+    dest: "{{ sites_enabled }}/{{ domain }}-ssl.conf"
+    state: link
   notify: restart apache2

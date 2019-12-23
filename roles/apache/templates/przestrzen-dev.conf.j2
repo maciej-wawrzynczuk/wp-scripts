@@ -1,0 +1,17 @@
+# -*- mode: apache -*-
+LoadModule ssl_module modules/mod_ssl.so
+
+<VirtualHost *:443>
+    ServerName "{{ domain }}"
+    SSLEngine on
+    SSLCertificateFile "{{ crt_file }}"
+    SSLCertificateKeyFile "{{ key_file }}"
+    ServerAdmin webmaster@localhost
+    DocumentRoot {{ wp_dir }}
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+<Directory {{ wp_dir }}>
+    AllowOverride All
+</Directory>

@@ -1,3 +1,12 @@
 ---
 # vars file for roles/apache
-apache_http_config: /etc/apache2/sites-available/wordpress.conf
+sites_available: "/etc/apache2/sites-available"
+sites_enabled: "{{ sites_available | replace('available', 'enabled') }}"
+nossl_config_file: "wordpress.conf"
+domain: "przestrzen-dev.lamamind.com"
+apache_http_config: "{{ sites_available }}/{{ nossl_config_file }}"
+apache_ssl_path: /etc/apache2/ssl
+key_file: "{{ apache_ssl_path }}/{{ domain }}.key"
+csr_file: "{{ apache_ssl_path }}/{{ domain }}.csr"
+crt_file: "{{ apache_ssl_path }}/{{ domain }}.crt"
+ssl_config: "{{ sites_available }}/{{ domain }}-ssl.conf"
