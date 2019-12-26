@@ -1,13 +1,39 @@
-# TODO:
-# EIP
-# DNS
-
 provider "aws" {
   region = "eu-central-1"
 }
 
+variable "fqdn" {}
+variable "os" {
+  default = "buster"
+}
+
+locals {
+  fqdn_elements = split(".", var.fqdn)
+  fqdn_size = length(local.fqdn_elements)
+  domain_elements = slice(local.fqdn_elements, 1, local.fqdn_size)
+  domain = join(".", local.domain_elements)
+  hostname = element(local.fqdn_elements, 0)
+
+  ami_data = {
+    "buster" = {
+      "owner" = "136693071363"
+      "admin_user" = "admin"
+      "search_string" = "debian-10*"
+    }
+  }
+}
+
+output "debug_1" {
+  value = local.ami_data
+}
+
 data "aws_ami" "buster" {
   most_recent = true
+
+  filter {
+    name   = "name"
+    values = [local.ami_data[var.os]["search_string"]]
+  }
 
   filter {
     name   = "architecture"
@@ -19,7 +45,7 @@ data "aws_ami" "buster" {
     values = ["hvm"]
   }
 
-  owners = ["136693071363"] # Debian 10
+  owners = [local.ami_data[var.os]["owner"]]
 }
 
 module "key" {
@@ -43,13 +69,13 @@ resource "aws_instance" "host" {
 
 
 data "aws_route53_zone" "lamamind" {
-  name = "lamamind.com."
+  name = local.domain
 }
 
 
 resource "aws_route53_record" "dns" {
   zone_id = data.aws_route53_zone.lamamind.id
-  name = "przestrzen-dev.${data.aws_route53_zone.lamamind.name}"
+  name = "${local.hostname}.${data.aws_route53_zone.lamamind.name}"
   type = "A"
   ttl = "300"
   records = [ aws_eip.my_ip.public_ip ]
@@ -85,4 +111,10 @@ resource "aws_security_group" "sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+}
+
+resource "local_file" "ansible_inventory" {
+  content = "${var.fqdn} ansible_user=${local.ami_data[var.os]["admin_user"]}"
+  filename = "hosts"
+  file_permission = "0440"
 }

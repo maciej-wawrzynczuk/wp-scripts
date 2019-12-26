@@ -6,3 +6,5 @@
 *.tfstate.*
 crash.log
 .venv
+config.json
+hosts

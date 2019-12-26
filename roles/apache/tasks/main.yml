@@ -35,14 +35,6 @@
     state: present
   notify: restart apache2
 
-# SSL
-# TODO:
-# + create key
-# + create self signed key
-# - create config
-#
-# - use letsencrypt cert
-
 - name: Create SSL dir
   file:
     path: "{{ apache_ssl_path }}"
@@ -60,7 +52,7 @@
   openssl_csr:
     path: "{{ csr_file }}"
     privatekey_path: "{{ key_file }}"
-    common_name: "{{ domain }}"
+    common_name: "{{ fqdn }}"
 
 - name: Sign cert
   openssl_certificate:
@@ -83,6 +75,6 @@
 - name: Enable SSL config
   file:
     src: "{{ ssl_config }}"
-    dest: "{{ sites_enabled }}/{{ domain }}-ssl.conf"
+    dest: "{{ sites_enabled }}/{{ fqdn }}-ssl.conf"
     state: link
   notify: restart apache2
