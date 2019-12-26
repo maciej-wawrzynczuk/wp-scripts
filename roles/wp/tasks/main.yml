@@ -29,13 +29,6 @@
     owner: www-data
     group: www-data
 
-    # TODO: modify config only when necsessery
-- name: get API information for wp-config
-  uri:
-    url: "https://api.wordpress.org/secret-key/1.1/salt/"
-    return_content: yes
-  register: salts
-
 - name: Configure Wordpress
   template:
     src: wp-config.php.j2
