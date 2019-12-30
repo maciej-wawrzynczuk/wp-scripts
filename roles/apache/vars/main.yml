@@ -1,11 +1,11 @@
 ---
 # vars file for roles/apache
-sites_available: "/etc/apache2/sites-available"
-sites_enabled: "{{ sites_available | replace('available', 'enabled') }}"
-nossl_config_file: "wordpress.conf"
-apache_http_config: "{{ sites_available }}/{{ nossl_config_file }}"
-apache_ssl_path: /etc/apache2/ssl
-key_file: "{{ apache_ssl_path }}/{{ fqdn }}.key"
-csr_file: "{{ apache_ssl_path }}/{{ fqdn }}.csr"
-crt_file: "{{ apache_ssl_path }}/{{ fqdn }}.crt"
+apache_base: "/etc/apache2"
+sites_available: "{{ apache_base }}/sites-available"
+sites_enabled: "{{ apache_base }}/sites-enabled"
+conf_available: "{{ apache_base }}/conf-available"
+conf_enabled: "{{ apache_base }}/conf-enabled"
 ssl_config: "{{ sites_available }}/{{ fqdn }}-ssl.conf"
+letsencrypt_certs_base: "/etc/letsencrypt/live"
+letsencrypt_cert: "{{ letsencrypt_certs_base }}/{{ fqdn }}/fullchain.pem"
+letsencrypt_key: "{{ letsencrypt_certs_base }}/{{ fqdn }}/privkey.pem"

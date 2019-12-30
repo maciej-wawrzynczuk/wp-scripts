@@ -4,7 +4,7 @@
   vars:
     db_name: "wordpress"
     db_user: "wordpress"
-    db_password: "Zupa"     # Change me
+    db_password: fTR[x}?t+0ioVo"fg;/WH<-VFwM[@W2p
     wp_dir: /var/www/wordpress
   roles:
     - db

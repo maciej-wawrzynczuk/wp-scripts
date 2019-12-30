@@ -5,8 +5,19 @@
   apt:
     name:
       - apache2
+      - certbot
     state: present
-    update_cache: true
+
+- name: Enable mod rewrite
+  apache2_module:
+    name: rewrite
+    state: present
+  notify: restart apache2
+
+- name: Enable ssl_module
+  apache2_module:
+    name: ssl
+    state: present
   notify: restart apache2
 
 
@@ -16,61 +27,45 @@
     state: absent
   notify: restart apache2
 
-- name: Create apache config
-  template:
-    src: "{{ nossl_config_file }}.j2"
-    dest: "{{ apache_http_config }}"
+- name: check if certs exists
+  stat:
+    path: "{{ letsencrypt_cert }}"
+  register: letsencrypt_certs
+
+- name: Stop apache
+  service:
+    name: apache2
+    state: stopped
+  when: letsencrypt_certs.stat.exists == False
+
+- name: Create letsencrypt cert
+  shell: certbot certonly --standalone --non-interactive --agree-tos -m maciej.wawrzynczuk@gmail.com -d przestrzen-dev.lamamind.com
+  args:
+    creates: "{{ letsencrypt_cert }}"
   notify: restart apache2
 
-- name: activate apache config
+- name: Start apache
+  service:
+    name: apache2
+    state: started
+
+- name: Copy SSL redirect config
+  copy:
+    src: rewrite.conf
+    dest: "{{ conf_available }}/rewrite.conf"
+
+- name: Enable SSL redirect
   file:
-    src: "{{ apache_http_config }}"
-    dest: "{{ sites_enabled }}/{{ nossl_config_file }}"
+    src: "{{ conf_available }}/rewrite.conf"
+    dest: "{{ conf_enabled }}/rewrite.conf"
     state: link
-  notify: restart apache2
-
-- name: Enable mod rewrite
-  apache2_module:
-    name: rewrite
-    state: present
-  notify: restart apache2
-
-- name: Create SSL dir
-  file:
-    path: "{{ apache_ssl_path }}"
-    owner: root
-    group: root
-    mode: "0700"
-    state: directory
-
-- name: Create key
-  openssl_privatekey:
-    path: "{{ key_file }}"
-    size: 2048
-
-- name: Create csr
-  openssl_csr:
-    path: "{{ csr_file }}"
-    privatekey_path: "{{ key_file }}"
-    common_name: "{{ fqdn }}"
-
-- name: Sign cert
-  openssl_certificate:
-    provider: selfsigned
-    path: "{{ crt_file }}"
-    privatekey_path: "{{ key_file }}"
-    csr_path: "{{ csr_file }}"
-
-- name: Enable ssl_module
-  apache2_module:
-    name: ssl
-    state: present
   notify: restart apache2
 
 - name: Create SSL config
   template:
     src: przestrzen-dev.conf.j2
     dest: "{{ ssl_config }}"
+  notify: restart apache2
 
 - name: Enable SSL config
   file:
@@ -78,3 +73,4 @@
     dest: "{{ sites_enabled }}/{{ fqdn }}-ssl.conf"
     state: link
   notify: restart apache2
+

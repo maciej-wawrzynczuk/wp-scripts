@@ -10,6 +10,9 @@ apply: przestrzen.tf config.json
 provision: salts.txt
 	ansible-playbook -e @config.yml wp.yml
 
+destroy: przestrzen.tf config.json
+	terraform destroy -var-file config.json
+
 salts.txt:
 	curl https://api.wordpress.org/secret-key/1.1/salt/ > $@
 
