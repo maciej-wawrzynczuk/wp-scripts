@@ -7,5 +7,6 @@
 crash.log
 .venv
 config.json
+config.yml
 hosts
 salts.txt
